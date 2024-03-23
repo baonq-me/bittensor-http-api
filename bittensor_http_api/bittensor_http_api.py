@@ -6,10 +6,11 @@ import os
 import socket
 import sys
 import time
+from functools import wraps
 
 import bittensor.btlogging as log
 import requests
-from bittensor import subtensor
+import bittensor as bt
 from dotenv import load_dotenv
 from flask import Response, render_template
 from flask import request
@@ -18,7 +19,7 @@ from flask_openapi3 import OpenAPI
 
 from model import InputNetuid, KeyAddress
 
-load_dotenv(".env")
+load_dotenv("bittensor_http_api/.env")
 
 
 def get_env(env_name):
@@ -86,12 +87,11 @@ def create_app():
 bittensor_http_api = create_app()
 
 
-# @btapi.get('/api/v1/subnet/<integer:netuid>', summary="Get subnet info", tags=[])
 @bittensor_http_api.get('/api/v1/subnets', summary="Get all subnets info", tags=[])
 # def get_subnets(netuid: str):
 def get_subnets():
     subnets = []
-    for subnet in subtensor(network=SUBTENSOR_NETWORK).get_all_subnets_info():
+    for subnet in bt.subtensor(network=SUBTENSOR_NETWORK).get_all_subnets_info():
         subnets.append({
             "netuid": subnet.netuid,
             "immunity_period_block": subnet.immunity_period,
@@ -117,7 +117,7 @@ def get_subnets():
 
 @bittensor_http_api.get('/api/v1/subnet/<int:netuid>', summary="Get all subnets info", tags=[])
 def get_subnet(path: InputNetuid):
-    subnet_metagraph = subtensor(network=SUBTENSOR_NETWORK).metagraph(path.netuid)
+    subnet_metagraph = bt.subtensor(network=SUBTENSOR_NETWORK).metagraph(path.netuid)
 
     uids = []
     for neuron in subnet_metagraph.neurons:
@@ -148,7 +148,7 @@ def get_subnet(path: InputNetuid):
 
 @bittensor_http_api.get('/api/v1/stake/coldkey/<string:ss58_address>', summary="Get cold key stake", tags=[])
 def get_coldkey_stake(path: KeyAddress):
-    st = subtensor(network=SUBTENSOR_NETWORK)
+    st = bt.subtensor(network=SUBTENSOR_NETWORK)
 
     try:
         if st.does_hotkey_exist(path.ss58_address):
@@ -179,13 +179,30 @@ def get_coldkey_stake(path: KeyAddress):
     )
 
 
+def check_auth(username, password):
+    return username == 'bao' and password == 'bao'
+
+def login_required(f):
+    @wraps(f)
+    def wrapped_view(**kwargs):
+        auth = request.authorization
+        if not (auth and check_auth(auth.username, auth.password)):
+            return ('Unauthorized', 401, {
+                'WWW-Authenticate': 'Basic realm="Login Required"'
+            })
+
+        return f(**kwargs)
+
+    return wrapped_view
+
 @bittensor_http_api.get('/api/v1/total', summary="Get cold key stake", tags=[])
+@login_required
 def get_total_tao():
     start_time = time.time()
     subtensor_call = 0
     block_shift = 0
 
-    st = subtensor(network=SUBTENSOR_NETWORK)
+    st = bt.subtensor(network=SUBTENSOR_NETWORK)
 
     try:
         current_block = st.get_current_block()
@@ -193,7 +210,7 @@ def get_total_tao():
     except Exception as e:
         log.logging.error(e)
         log.logging.error(f"Error when using subtensor endpoint {SUBTENSOR_NETWORK}, switching to finney ...")
-        st = subtensor(network="finney")
+        st = bt.subtensor(network="finney")
         current_block = st.get_current_block()
         subtensor_call += 1
 
@@ -210,7 +227,7 @@ def get_total_tao():
         }
 
         subtensor_call += 1
-        cold_key_stake = st.get_stake_info_for_coldkey(cold_key, block=current_block-block_shift)
+        cold_key_stake = st.get_stake_info_for_coldkey(cold_key, block=current_block - block_shift)
         if cold_key_stake is None:
             log.logging.warning(f"Cold key {cold_key} ({wallet_name}) does not have any hot key on the network")
             cold_key_stake = {}
@@ -227,7 +244,7 @@ def get_total_tao():
 
             log.logging.info(f"wallet {wallet_name} -> hot key {stake_info.hotkey_ss58} -> {stake_info.stake.tao} tao")
 
-        cold_key_balance = st.get_balance(cold_key, block=current_block-block_shift).tao
+        cold_key_balance = st.get_balance(cold_key, block=current_block - block_shift).tao
         log.logging.info(f"wallet {wallet_name} -> cold key balance -> {cold_key_balance} tao")
         subtensor_call += 1
         total_tao_cold_keys += cold_key_balance
