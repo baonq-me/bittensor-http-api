@@ -15,12 +15,10 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-#ADD data /app/data
-#ADD api /app/api
-#ADD common /app/common
-#ADD core /app/core
-
 COPY bittensor_http_api/bittensor_http_api.py /app
 COPY bittensor_http_api/config.py /app
+COPY bittensor_http_api/wsgi.py.py /app
+
+EXPOSE 8080
 
 CMD [ "gunicorn", "--access-logfile", "-", "-c", "config.py", "wsgi:bittensor_http_api"]
