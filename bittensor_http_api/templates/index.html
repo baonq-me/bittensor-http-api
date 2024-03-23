@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sortable Table</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <script>
+        $(document).ready( function () {
+            $('#table_id').DataTable();
+        });
+    </script>
+</head>
+<body>
+    <table id="table_id" class="display">
+        <thead>
+            <tr>
+                <th>NetUID</th>
+                <th>Immunity Period Block</th>
+                <th>Immunity Period Hours</th>
+                <th>Subnetwork N</th>
+                <th>Max N</th>
+                <th>Emission Value</th>
+                <th>Burn</th>
+                <th>Owner SS58</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr>
+                <td>{{ item.netuid }}</td>
+                <td>{{ item.immunity_period_block }}</td>
+                <td>{{ item.immunity_period_hours }}</td>
+                <td>{{ item.subnetwork_n }}</td>
+                <td>{{ item.max_n }}</td>
+                <td>{{ item.emission_value }}</td>
+                <td>{{ item.burn }}</td>
+                <td>{{ item.owner_ss58 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

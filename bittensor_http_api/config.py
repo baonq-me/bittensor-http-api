@@ -3,11 +3,13 @@ from multiprocessing import cpu_count
 from os import environ
 import gunicorn
 
-def max_workers():    
+
+def max_workers():
     return cpu_count()
 
-bind = '0.0.0.0:8080'
-max_requests = 1000
-worker_class = 'gevent'
-workers = 2 # max_workers()
+
+bind = '0.0.0.0:8083'
+max_requests = 100
+#worker_class = 'gevent'
+workers = 1  # max_workers()
 gunicorn.SERVER = 'undisclosed'
