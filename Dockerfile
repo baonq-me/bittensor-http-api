@@ -19,4 +19,4 @@ COPY bittensor_http_api/ /bittensor_http_api/
 
 EXPOSE 8080
 
-CMD [ "gunicorn", "--access-logfile", "-", "-c", "config.py", "wsgi:bittensor_http_api"]
+CMD [ "gunicorn", "--timeout", "900", "--access-logfile", "-", "-c", "config.py", "wsgi:bittensor_http_api"]
