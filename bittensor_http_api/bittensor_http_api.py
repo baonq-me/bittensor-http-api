@@ -31,7 +31,6 @@ info = Info(title="Bittensor HTTP API", version="1.0.0")
 
 log.logging.info("Hostname: " + socket.gethostname())
 
-APP_NAME = get_env("APP_NAME")
 SUBTENSOR_NETWORK = get_env("SUBTENSOR_NETWORK")
 
 KUCOIN_API_KEY = get_env("KUCOIN_API_KEY")
