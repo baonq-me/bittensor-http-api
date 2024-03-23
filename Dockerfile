@@ -20,6 +20,7 @@ ENV PYTHONUNBUFFERED 1
 #ADD common /app/common
 #ADD core /app/core
 
-COPY *.py /app
+COPY bittensor-http-api.py /app
+COPY config.py /app
 
 CMD [ "gunicorn", "--access-logfile", "-", "-c", "config.py", "wsgi:bittensor-http-api"]
