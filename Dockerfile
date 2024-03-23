@@ -23,4 +23,4 @@ ENV PYTHONUNBUFFERED 1
 COPY bittensor_http_api.py /app
 COPY config.py /app
 
-CMD [ "gunicorn", "--access-logfile", "-", "-c", "config.py", "wsgi:bittensor-http-api"]
+CMD [ "gunicorn", "--access-logfile", "-", "-c", "config.py", "wsgi:bittensor_http_api"]
