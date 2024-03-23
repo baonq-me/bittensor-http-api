@@ -1,4 +1,4 @@
-FROM python:3.11-bookworm
+FROM quocbao747/bittensor:1.0
 
 # For healthcheck
 #RUN apk --update --no-cache add curl
@@ -7,7 +7,7 @@ WORKDIR /app
 
 # This take time. In case having changes in requirements.txt, we don't
 # need to rebuild docker image with bittensor
-RUN pip3 install --no-cache-dir bittensor
+# RUN pip3 install --no-cache-dir bittensor
 
 COPY requirements.txt /app
 RUN pip3 install --no-cache-dir -r requirements.txt
