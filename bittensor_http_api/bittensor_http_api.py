@@ -17,7 +17,7 @@ from flask import request
 from flask_openapi3 import Info, Server
 from flask_openapi3 import OpenAPI
 
-from model import InputNetuid, KeyAddress
+from model import InputNetuid, KeyAddress, UidAddress
 
 load_dotenv("bittensor_http_api/.env")
 
@@ -145,6 +145,48 @@ def get_subnet(path: InputNetuid):
         mimetype='application/json'
     )
 
+@bittensor_http_api.get('/api/v1/subnet/<int:netuid>/uid/<int:uid>', summary="Get subnet uid status", tags=[])
+def get_uid_info(path: UidAddress):
+
+    if request.args.get('subtensor_node'):
+        st = bt.subtensor(network=request.args.get('subtensor_node'))
+        bt.logging.info(f"Connected to subtensor node {request.args.get('subtensor_node')}")
+    else:
+        st = bt.subtensor(network=SUBTENSOR_NETWORK)
+        bt.logging.info(f"Using default subtensor node {SUBTENSOR_NETWORK}")
+
+    current_block = st.get_current_block()
+    bt.logging.info(f"Current block: {current_block}")
+
+    # Currently lite node only store information of 300-most recent block
+    subnet_immunity_period = min(300, st.get_subnet_info(path.netuid).immunity_period)
+
+    bt.logging.info(f"Subnet {path.netuid} as immunity period = {subnet_immunity_period}")
+    uid_info = st.metagraph(path.netuid).neurons[path.uid]
+    uid_hotkey = uid_info.hotkey
+
+    uid_hotkey_last_period = st.metagraph(netuid=path.netuid, block=current_block - subnet_immunity_period).neurons[path.uid].hotkey
+
+    return Response(
+        json.dumps({
+            "block": current_block,
+            "time_epoch": int(time.time()),
+            "data": {
+                "uid": path.uid,
+                "netuid": path.netuid,
+                "immunity_period": subnet_immunity_period,
+                "is_in_immunity_period": uid_hotkey != uid_hotkey_last_period,
+                "coldkey": uid_info.coldkey,
+                "hotkey": uid_info.hotkey,
+                "incentive": round(uid_info.incentive, 6),
+                "emission": round(uid_info.emission, 6),
+                "axon": f"{uid_info.axon_info.ip}:{uid_info.axon_info.port}",
+                "axon_serving": uid_info.axon_info.is_serving,
+            }
+        }),
+        status=200,
+        mimetype='application/json'
+    )
 
 @bittensor_http_api.get('/api/v1/stake/coldkey/<string:ss58_address>', summary="Get cold key stake", tags=[])
 def get_coldkey_stake(path: KeyAddress):
