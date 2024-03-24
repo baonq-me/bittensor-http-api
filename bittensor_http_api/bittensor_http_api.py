@@ -145,12 +145,11 @@ def get_subnet(path: InputNetuid):
         mimetype='application/json'
     )
 
+
 @bittensor_http_api.get('/api/v1/subnet/<int:netuid>/uid/<int:uid>', summary="Get subnet uid status", tags=[])
 def get_uid_info(path: UidAddress):
-
     if request.args.get('check_immunity'):
         st = bt.subtensor(network="archive")
-        bt.logging.info(f"Connected to subtensor node {st.su}")
     else:
         st = bt.subtensor(network=SUBTENSOR_NETWORK)
 
@@ -181,7 +180,8 @@ def get_uid_info(path: UidAddress):
     }
 
     if request.args.get('check_immunity'):
-        uid_hotkey_last_period = st.metagraph(netuid=path.netuid, block=current_block - subnet_immunity_period).neurons[path.uid].hotkey
+        uid_hotkey_last_period = st.metagraph(netuid=path.netuid, block=current_block - subnet_immunity_period).neurons[
+            path.uid].hotkey
         response["data"]["is_in_immunity_period"] = uid_hotkey != uid_hotkey_last_period
 
     return Response(
@@ -189,6 +189,7 @@ def get_uid_info(path: UidAddress):
         status=200,
         mimetype='application/json'
     )
+
 
 @bittensor_http_api.get('/api/v1/stake/coldkey/<string:ss58_address>', summary="Get cold key stake", tags=[])
 def get_coldkey_stake(path: KeyAddress):
@@ -226,6 +227,7 @@ def get_coldkey_stake(path: KeyAddress):
 def check_auth(username, password):
     return username == 'bao' and password == 'bao'
 
+
 def login_required(f):
     @wraps(f)
     def wrapped_view(**kwargs):
@@ -238,6 +240,7 @@ def login_required(f):
         return f(**kwargs)
 
     return wrapped_view
+
 
 @bittensor_http_api.get('/api/v1/total', summary="Get cold key stake", tags=[])
 @login_required
