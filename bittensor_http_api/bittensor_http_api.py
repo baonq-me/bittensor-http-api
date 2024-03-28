@@ -115,7 +115,7 @@ def get_subnets():
     )
 
 
-@bittensor_http_api.get('/api/v1/subnet/<int:netuid>', summary="Get all subnets info", tags=[])
+@bittensor_http_api.get('/api/v1/netuid/<int:netuid>', summary="Get all subnets info", tags=[])
 def get_subnet(path: InputNetuid):
     subnet_metagraph = bt.subtensor(network=SUBTENSOR_NETWORK).metagraph(path.netuid)
 
@@ -145,8 +145,7 @@ def get_subnet(path: InputNetuid):
         mimetype='application/json'
     )
 
-
-@bittensor_http_api.get('/api/v1/subnet/<int:netuid>/uid/<int:uid>', summary="Get subnet uid status", tags=[])
+@bittensor_http_api.get('/api/v1/netuid/<int:netuid>/uid/<int:uid>', summary="Get subnet uid status", tags=[])
 def get_uid_info(path: UidAddress):
     if request.args.get('check_immunity'):
         st = bt.subtensor(network="archive")
