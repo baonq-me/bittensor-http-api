@@ -147,6 +147,8 @@ def get_subnet(path: InputNetuid):
 
 @bittensor_http_api.get('/api/v1/netuid/<int:netuid>/uid/<int:uid>', summary="Get subnet uid status", tags=[])
 def get_uid_info(path: UidAddress):
+    time_start = time.time()
+
     if request.args.get('check_immunity'):
         st = bt.subtensor(network="archive")
     else:
@@ -155,7 +157,10 @@ def get_uid_info(path: UidAddress):
     current_block = st.get_current_block()
     bt.logging.info(f"Current block: {current_block}")
 
-    uid_info = st.metagraph(path.netuid).neurons[path.uid]
+    subnet_metagraph = st.metagraph(path.netuid)
+    uid_info = subnet_metagraph.neurons[path.uid]
+    #subnet_info = st.get_subnet_info(netuid=path.netuid)
+
     uid_hotkey = uid_info.hotkey
 
     # Currently lite node only store information of 300-most recent block
@@ -165,6 +170,7 @@ def get_uid_info(path: UidAddress):
     response = {
         "block": current_block,
         "time_epoch": int(time.time()),
+        "run_time_seconds": f"{round(time.time() - time_start, 2)}",
         "data": {
             "uid": path.uid,
             "netuid": path.netuid,
@@ -172,6 +178,7 @@ def get_uid_info(path: UidAddress):
             "coldkey": uid_info.coldkey,
             "hotkey": uid_info.hotkey,
             "incentive": round(uid_info.incentive, 6),
+    #        "daily_rewards_tao": round(uid_info.incentive, 6),
             "emission": round(uid_info.emission, 6),
             "axon": f"{uid_info.axon_info.ip}:{uid_info.axon_info.port}",
             "axon_serving": uid_info.axon_info.is_serving,
