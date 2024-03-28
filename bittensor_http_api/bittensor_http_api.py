@@ -280,7 +280,6 @@ def login_required(f):
 
     return wrapped_view
 
-
 @bittensor_http_api.get('/api/v1/total', summary="Get cold key stake", tags=[])
 @login_required
 def get_total_tao():
@@ -370,12 +369,10 @@ def get_total_tao():
 
     return Response(
         json.dumps({
-            "metadata": {
-                "block": current_block,
-                "time_epoch": int(time.time()),
-                "run_time_seconds": f"{round(time.time() - start_time, 2)}",
-                "subtensor_call": subtensor_call,
-            },
+            "block": current_block,
+            "time_epoch": int(time.time()),
+            "run_time_seconds": f"{round(time.time() - start_time, 2)}",
+            "subtensor_call": subtensor_call,
             "data": response_data
         }),
         status=200,
