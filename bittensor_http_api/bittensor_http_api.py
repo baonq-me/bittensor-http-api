@@ -191,9 +191,11 @@ def get_uid_info(path: UidAddress):
     )
 
 
-@bittensor_http_api.get('/api/v1/stake/coldkey/<string:ss58_address>', summary="Get cold key stake", tags=[])
+@bittensor_http_api.get('/api/v1/cold_key/<string:ss58_address>', summary="Get cold key stake", tags=[])
 def get_coldkey_stake(path: KeyAddress):
+    time_start = time.time()
     st = bt.subtensor(network=SUBTENSOR_NETWORK)
+    cold_key = path.ss58_address
 
     try:
         if st.does_hotkey_exist(path.ss58_address):
@@ -213,11 +215,48 @@ def get_coldkey_stake(path: KeyAddress):
             mimetype='application/json'
         )
 
+    cold_key_stake = st.get_stake_info_for_coldkey(cold_key)
+    if cold_key_stake is None:
+        # log.logging.warning(f"Cold key {cold_key} does not have any hot key on the network")
+        return Response(
+            json.dumps({
+                "block": int(st.block),
+                "time_epoch": int(time.time()),
+                "run_time_seconds": f"{round(time.time() - time_start, 2)}",
+                "error": f"Cold key {cold_key} does not have any hot key on the network"
+            }),
+            status=400,
+            mimetype='application/json'
+        )
+
+    stake_coldkey = []
+    total_hotkey = 0
+    for stake in cold_key_stake:
+        if stake.stake.rao == 0:
+            continue
+
+        stake_coldkey.append({
+            "hot_key": stake.hotkey_ss58,
+            "tao": round(stake.stake.tao, 5),
+        })
+        total_hotkey += stake.stake.tao
+
+    balance = st.get_balance(cold_key)
+
     return Response(
         json.dumps({
             "block": int(st.block),
             "time_epoch": int(time.time()),
-            "stake_coldkey": st.get_total_stake_for_coldkey(path.ss58_address).tao
+            "run_time_seconds": f"{round(time.time() - time_start, 2)}",
+            "data": {
+                "cold_key": cold_key,
+                "stake": stake_coldkey,
+                "total": {
+                    "hot_key": round(total_hotkey, 5),
+                    "cold_key": round(balance.tao, 5),
+                    "total": round(total_hotkey + balance.tao, 5)
+                }
+            }
         }),
         status=200,
         mimetype='application/json'
